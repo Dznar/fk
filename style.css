@@ -1,3 +1,11 @@
+@font-face {
+  font-family: 'CustomFont';
+  src: url('/fonts/custom-font.ttf') format('truetype'),
+       url('/fonts/custom-font.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 * {
   margin: 0;
   padding: 0;

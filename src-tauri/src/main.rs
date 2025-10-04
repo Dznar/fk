@@ -2,11 +2,32 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::fs;
-use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
+use tauri::command;
+
+fn detect_nixos() -> bool {
+    std::path::Path::new("/etc/NIXOS").exists() ||
+    std::path::Path::new("/etc/os-release")
+        .and_then(|p| std::fs::read_to_string(p).ok())
+        .map(|content| content.contains("nixos"))
+        .unwrap_or(false)
+}
 
 fn get_typst_binary_path() -> Result<PathBuf, String> {
+    if detect_nixos() {
+        return Ok(PathBuf::from("typst"));
+    }
+
+    if let Ok(output) = Command::new("which").arg("typst").output() {
+        if output.status.success() {
+            let path_str = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            if !path_str.is_empty() {
+                return Ok(PathBuf::from(path_str));
+            }
+        }
+    }
+
     let bin_dir = std::env::current_exe()
         .map_err(|e| e.to_string())?
         .parent()
@@ -17,7 +38,6 @@ fn get_typst_binary_path() -> Result<PathBuf, String> {
         fs::create_dir_all(&bin_dir).map_err(|e| e.to_string())?;
     }
 
-    // Determine platform-specific binary name
     #[cfg(target_os = "windows")]
     let binary_name = "typst.exe";
     #[cfg(not(target_os = "windows"))]
@@ -25,48 +45,75 @@ fn get_typst_binary_path() -> Result<PathBuf, String> {
 
     let binary_path = bin_dir.join(binary_name);
 
-    // If binary already exists, return path
     if binary_path.exists() {
         return Ok(binary_path);
     }
 
-    // Otherwise, download the binary
-    let url = match (std::env::consts::OS, std::env::consts::ARCH) {
-        ("windows", "x86_64") => "https://github.com/typst/typst/releases/latest/download/typst-x86_64-pc-windows-msvc.zip",
-        ("linux", "x86_64") => "https://github.com/typst/typst/releases/latest/download/typst-x86_64-unknown-linux-gnu.zip",
-        ("macos", "x86_64") => "https://github.com/typst/typst/releases/latest/download/typst-x86_64-apple-darwin.zip",
-        ("macos", "aarch64") => "https://github.com/typst/typst/releases/latest/download/typst-aarch64-apple-darwin.zip",
+    let (url, archive_type) = match (std::env::consts::OS, std::env::consts::ARCH) {
+        ("windows", "x86_64") => (
+            "https://github.com/typst/typst/releases/latest/download/typst-x86_64-pc-windows-msvc.zip",
+            "zip"
+        ),
+        ("linux", "x86_64") => (
+            "https://github.com/typst/typst/releases/latest/download/typst-x86_64-unknown-linux-musl.tar.xz",
+            "tar"
+        ),
+        ("macos", "x86_64") => (
+            "https://github.com/typst/typst/releases/latest/download/typst-x86_64-apple-darwin.tar.xz",
+            "tar"
+        ),
+        ("macos", "aarch64") => (
+            "https://github.com/typst/typst/releases/latest/download/typst-aarch64-apple-darwin.tar.xz",
+            "tar"
+        ),
         _ => return Err("Unsupported platform".into()),
     };
 
-    // Download the zip archive
     let response = reqwest::blocking::get(url).map_err(|e| e.to_string())?;
     if !response.status().is_success() {
         return Err(format!("Failed to download Typst CLI: HTTP {}", response.status()));
     }
     let bytes = response.bytes().map_err(|e| e.to_string())?;
 
-    // Save zip to temp file
-    let tmp_zip_path = bin_dir.join("typst.zip");
-    fs::write(&tmp_zip_path, &bytes).map_err(|e| e.to_string())?;
+    if archive_type == "zip" {
+        let tmp_zip_path = bin_dir.join("typst.zip");
+        fs::write(&tmp_zip_path, &bytes).map_err(|e| e.to_string())?;
 
-    // Extract the binary from zip
-    let file = fs::File::open(&tmp_zip_path).map_err(|e| e.to_string())?;
-    let mut archive = zip::ZipArchive::new(file).map_err(|e| e.to_string())?;
+        let file = fs::File::open(&tmp_zip_path).map_err(|e| e.to_string())?;
+        let mut archive = zip::ZipArchive::new(file).map_err(|e| e.to_string())?;
 
-    for i in 0..archive.len() {
-        let mut file = archive.by_index(i).map_err(|e| e.to_string())?;
-        if file.name().ends_with(binary_name) {
-            let mut out_file = fs::File::create(&binary_path).map_err(|e| e.to_string())?;
-            std::io::copy(&mut file, &mut out_file).map_err(|e| e.to_string())?;
-            break;
+        for i in 0..archive.len() {
+            let mut file = archive.by_index(i).map_err(|e| e.to_string())?;
+            if file.name().ends_with(binary_name) || file.name().ends_with("typst.exe") {
+                let mut out_file = fs::File::create(&binary_path).map_err(|e| e.to_string())?;
+                std::io::copy(&mut file, &mut out_file).map_err(|e| e.to_string())?;
+                break;
+            }
         }
+
+        fs::remove_file(&tmp_zip_path).ok();
+    } else {
+        let tmp_tar_path = bin_dir.join("typst.tar.xz");
+        fs::write(&tmp_tar_path, &bytes).map_err(|e| e.to_string())?;
+
+        let tar_file = fs::File::open(&tmp_tar_path).map_err(|e| e.to_string())?;
+        let decompressor = xz2::read::XzDecoder::new(tar_file);
+        let mut archive = tar::Archive::new(decompressor);
+
+        for entry in archive.entries().map_err(|e| e.to_string())? {
+            let mut entry = entry.map_err(|e| e.to_string())?;
+            let path = entry.path().map_err(|e| e.to_string())?;
+
+            if path.file_name().and_then(|n| n.to_str()) == Some(binary_name) {
+                let mut out_file = fs::File::create(&binary_path).map_err(|e| e.to_string())?;
+                std::io::copy(&mut entry, &mut out_file).map_err(|e| e.to_string())?;
+                break;
+            }
+        }
+
+        fs::remove_file(&tmp_tar_path).ok();
     }
 
-    // Remove the zip file
-    fs::remove_file(&tmp_zip_path).ok();
-
-    // Set executable permissions on Unix
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
@@ -76,6 +123,7 @@ fn get_typst_binary_path() -> Result<PathBuf, String> {
 
     Ok(binary_path)
 }
+
 #[command]
 fn compile_typst(content: String, output_path: String) -> Result<String, String> {
     let typst_path = get_typst_binary_path()?;
@@ -85,7 +133,7 @@ fn compile_typst(content: String, output_path: String) -> Result<String, String>
 
     fs::write(&input_path, content).map_err(|e| e.to_string())?;
 
-    let output = Command::new(typst_path)
+    let output = Command::new(&typst_path)
         .arg("compile")
         .arg(&input_path)
         .arg(&output_path)
@@ -98,4 +146,38 @@ fn compile_typst(content: String, output_path: String) -> Result<String, String>
         let stderr = String::from_utf8_lossy(&output.stderr);
         Err(format!("Typst compilation failed: {}", stderr))
     }
+}
+
+#[command]
+fn read_file(path: String) -> Result<String, String> {
+    fs::read_to_string(path).map_err(|e| e.to_string())
+}
+
+#[command]
+fn write_file(path: String, content: String) -> Result<(), String> {
+    fs::write(path, content).map_err(|e| e.to_string())
+}
+
+#[command]
+fn check_typst_installation() -> Result<String, String> {
+    match get_typst_binary_path() {
+        Ok(path) => Ok(format!("Typst is available at: {:?}", path)),
+        Err(e) => Err(format!("Typst installation check failed: {}", e)),
+    }
+}
+
+fn main() {
+    tauri::Builder::default()
+        .setup(|_app| {
+            let _ = get_typst_binary_path();
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![
+            compile_typst,
+            read_file,
+            write_file,
+            check_typst_installation
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
 }
