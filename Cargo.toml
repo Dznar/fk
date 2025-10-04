@@ -1,0 +1,19 @@
+[package]
+name = "Feather-ink"
+version = "0.1.0"
+description = "A Typst IDE with live preview"
+authors = ["LFakh"]
+license = "Apache 2"
+repository = ""
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "1.5", features = [] }
+
+[dependencies]
+tauri = { version = "1.5", features = [ "shell-execute", "dialog-all", "fs-all", "shell-open"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[features]
+custom-protocol = ["tauri/custom-protocol"]
