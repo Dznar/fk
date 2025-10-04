@@ -17,8 +17,20 @@ A modern Typst IDE built with Tauri, featuring real-time preview and automatic T
 The app will automatically download and install the Typst compiler when you first run it. No manual installation required.
 
 ### NixOS
+Feather-ink supports development on NixOS and Nix-enabled systems.
 The app detects NixOS and uses the system's Typst installation. Ensure you have Typst installed via nix-shell:
 
+- If you use **Nix flakes** (nixpkgs unstable), run:
+  ```sh
+  nix develop
+  ```
+- If you use **stable Nix** or prefer classic workflows, run:
+  ```sh
+  nix-shell
+  ```
+Both commands will provide all the dependencies needed for building and running Feather-ink.
+
+_Note: On NixOS, Typst and other dependencies are provided by Nix; the app will not attempt to download or install Typst automatically._
 ```bash
 nix-shell
 ```
