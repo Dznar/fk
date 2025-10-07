@@ -32,16 +32,12 @@ This paragraph contains *bold text*, _italic text_, and #underline[underlined te
 
 Mathematical formula: $E = m c^2$
 
-// This is a single-line comment and should be removed
-/* This is a
-   multi-line comment and should be removed */
-
 #pagebreak()
 
 #outline()
 
 #v(1cm)
-  #image("icons/32x32.png", width: 20%)
+  
   caption: [Sample Figure Caption]
 
 

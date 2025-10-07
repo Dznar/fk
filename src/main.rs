@@ -1,16 +1,14 @@
-// Prevents additional console window on Windows in release, DO NOT REMOVE!!
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use tauri::command;
+use regex::Regex;
 
 fn detect_nixos() -> bool {
-    if std::path::Path::new("/etc/NIXOS").exists() {
+    if Path::new("/etc/NIXOS").exists() {
         return true;
     }
-    if let Ok(content) = std::fs::read_to_string("/etc/os-release") {
+    if let Ok(content) = fs::read_to_string("/etc/os-release") {
         return content.contains("nixos");
     }
     false
@@ -175,6 +173,33 @@ fn check_typst_installation() -> Result<String, String> {
 
 use std::io::Read;
 
+fn process_typst_images_for_preview(
+    typst_content: &str,
+    preview_dir: &Path,
+) -> Result<String, String> {
+    let re = Regex::new(r#"#image\(["']([^"']+)["']\)"#).unwrap();
+    let images_dir = preview_dir.join("images");
+    fs::create_dir_all(&images_dir).map_err(|e| e.to_string())?;
+
+    let rewritten = re.replace_all(typst_content, |caps: &regex::Captures| {
+        let orig_path = &caps[1];
+        let original_file = Path::new(orig_path);
+
+        // Copy the original image to preview_dir/images/filename
+        let filename = original_file.file_name().unwrap_or_default();
+        let dest_path = images_dir.join(filename);
+
+        if let Err(e) = fs::copy(&original_file, &dest_path) {
+            eprintln!("Failed to copy image: {} to {:?}: {}", orig_path, dest_path, e);
+        }
+
+        // Always point to images/filename.ext in the preview dir
+        format!("#image(\"images/{fname}\")", fname = filename.to_string_lossy())
+    });
+
+    Ok(rewritten.to_string())
+}
+
 #[command]
 fn render_typst_preview(content: String) -> Result<Vec<Vec<u8>>, String> {
     let typst_path = get_typst_binary_path()?;
@@ -189,10 +214,11 @@ fn render_typst_preview(content: String) -> Result<Vec<Vec<u8>>, String> {
     ));
     fs::create_dir_all(&preview_dir).map_err(|e| e.to_string())?;
 
+    let rewritten_content = process_typst_images_for_preview(&content, &preview_dir)?;
+
     let input_path = preview_dir.join("preview_input.typ");
     let output_path_template = preview_dir.join("preview-{p}.svg");
-
-    fs::write(&input_path, &content).map_err(|e| e.to_string())?;
+    fs::write(&input_path, &rewritten_content).map_err(|e| e.to_string())?;
 
     let output = Command::new(&typst_path)
         .arg("compile")
