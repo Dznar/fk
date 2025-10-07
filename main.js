@@ -2,16 +2,20 @@ import './style.css';
 import { createEditor } from './src/editor.js';
 import { renderTypstPreview } from './src/typstPreview.js';
 import { DocumentHistory } from './src/history.js';
+import { open } from '@tauri-apps/api/dialog';
 import { openFile, saveFile, exportToPdf } from './src/fileOperations.js';
 
 let editor;
 let currentFilePath = null;
 let documentHistory = new DocumentHistory();
 let autoSaveTimer = null;
+let selectedFont = '';
 
-function updatePreview(content) {
+async function updatePreview(content) {
   const previewElement = document.getElementById('preview');
-  const html = renderTypstPreview(content);
+  previewElement.innerHTML = '<div style="color: #858585; padding: 24px; text-align: center;">Rendering preview...</div>';
+
+  const html = await renderTypstPreview(content);
   previewElement.innerHTML = html;
 }
 
@@ -37,17 +41,17 @@ function updateFileInfo(filename = 'Untitled') {
 }
 
 function handleEditorChange(content) {
-  updatePreview(content);
   updateCharCount(content);
 
   if (autoSaveTimer) {
     clearTimeout(autoSaveTimer);
   }
 
-  autoSaveTimer = setTimeout(() => {
+  autoSaveTimer = setTimeout(async () => {
+    await updatePreview(content);
     documentHistory.push(content);
     updateUndoRedoButtons();
-  }, 500);
+  }, 800);
 }
 
 function updateUndoRedoButtons() {
@@ -133,28 +137,71 @@ async function handleExport() {
   }
 }
 
-function handleUndo() {
+function handleFontChange(event) {
+  selectedFont = event.target.value;
+  let content = editor.state.doc.toString();
+  const fontConfig = `#set text(font: "${selectedFont}")\n\n`;
+
+  // Remove existing font setting
+  let newContent = content.replace(/^#set text\(font:.*?\)\n\n/, '');
+
+  if (selectedFont) {
+    newContent = fontConfig + newContent;
+  }
+  
+  if (content !== newContent) {
+    setEditorContent(newContent);
+  }
+  updateStatus(selectedFont ? `Font changed to: ${selectedFont}` : 'Using default font');
+}
+
+async function handleUndo() {
   const content = documentHistory.undo();
   if (content !== null) {
     setEditorContent(content);
+    await updatePreview(content);
     updateStatus('Undo');
     updateUndoRedoButtons();
   }
 }
 
-function handleRedo() {
+async function handleRedo() {
   const content = documentHistory.redo();
   if (content !== null) {
     setEditorContent(content);
+    await updatePreview(content);
     updateStatus('Redo');
     updateUndoRedoButtons();
   }
 }
 
-function handleRefresh() {
+async function handleRefresh() {
   const content = editor.state.doc.toString();
-  updatePreview(content);
+  await updatePreview(content);
   updateStatus('Preview refreshed');
+}
+
+async function handleInsertImage() {
+  try {
+    const selected = await open({
+      filters: [{
+        name: 'Image',
+        extensions: ['png', 'jpg', 'jpeg', 'gif', 'svg']
+      }]
+    });
+    if (selected && typeof selected === 'string') {
+      const imagePath = selected.replace(/\\/g, '/'); // Normalize path for typst
+      const textToInsert = `#image("${imagePath}")`;
+      
+      const currentPos = editor.state.selection.main.head;
+      const transaction = editor.state.update({
+        changes: { from: currentPos, insert: textToInsert }
+      });
+      editor.dispatch(transaction);
+    }
+  } catch (error) {
+    updateStatus(`Error selecting image: ${error}`, 5000);
+  }
 }
 
 function initializeResizer() {
@@ -193,7 +240,7 @@ function initializeResizer() {
   });
 }
 
-function initializeApp() {
+async function initializeApp() {
   const editorContainer = document.getElementById('editor');
   editor = createEditor(editorContainer, handleEditorChange);
 
@@ -204,12 +251,14 @@ function initializeApp() {
   document.getElementById('btn-undo').addEventListener('click', handleUndo);
   document.getElementById('btn-redo').addEventListener('click', handleRedo);
   document.getElementById('btn-refresh').addEventListener('click', handleRefresh);
+  document.getElementById('btn-insert-image').addEventListener('click', handleInsertImage);
+  document.getElementById('font-select').addEventListener('change', handleFontChange);
 
   initializeResizer();
 
   const initialContent = editor.state.doc.toString();
   documentHistory.push(initialContent);
-  updatePreview(initialContent);
+  await updatePreview(initialContent);
   updateCharCount(initialContent);
   updateUndoRedoButtons();
   updateStatus('Ready');

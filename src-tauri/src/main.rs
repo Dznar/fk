@@ -166,6 +166,36 @@ fn check_typst_installation() -> Result<String, String> {
     }
 }
 
+#[command]
+fn render_typst_preview(content: String) -> Result<Vec<u8>, String> {
+    let typst_path = get_typst_binary_path()?;
+
+    let temp_dir = std::env::temp_dir();
+    let input_path = temp_dir.join("preview_input.typ");
+    let output_path = temp_dir.join("preview_output.svg");
+
+    fs::write(&input_path, content).map_err(|e| e.to_string())?;
+
+    let output = Command::new(&typst_path)
+        .arg("compile")
+        .arg(&input_path)
+        .arg(&output_path)
+        .arg("--format")
+        .arg("svg")
+        .output()
+        .map_err(|e| format!("Failed to execute typst command: {}", e))?;
+
+    if output.status.success() {
+        let svg_data = fs::read(&output_path).map_err(|e| e.to_string())?;
+        fs::remove_file(&output_path).ok();
+        fs::remove_file(&input_path).ok();
+        Ok(svg_data)
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        Err(format!("Typst rendering failed: {}", stderr))
+    }
+}
+
 fn main() {
     tauri::Builder::default()
         .setup(|_app| {
@@ -176,7 +206,8 @@ fn main() {
             compile_typst,
             read_file,
             write_file,
-            check_typst_installation
+            check_typst_installation,
+            render_typst_preview
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

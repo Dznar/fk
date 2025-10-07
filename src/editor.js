@@ -1,9 +1,23 @@
-import { EditorView, keymap, lineNumbers, highlightActiveLineGutter } from '@codemirror/view';
+import { EditorView, keymap, lineNumbers, highlightActiveLineGutter, highlightActiveLine } from '@codemirror/view';
 import { EditorState } from '@codemirror/state';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
-import { markdown } from '@codemirror/lang-markdown';
 import { oneDark } from '@codemirror/theme-one-dark';
-import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
+import { syntaxHighlighting, HighlightStyle, bracketMatching } from '@codemirror/language';
+import { tags } from '@lezer/highlight';
+import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
+import typstLanguage from './typstLanguage.js';
+
+const typstHighlighting = HighlightStyle.define([
+  { tag: tags.heading, color: '#4ec9b0', fontWeight: 'bold' },
+  { tag: tags.keyword, color: '#569cd6' },
+  { tag: tags.string, color: '#ce9178' },
+  { tag: tags.comment, color: '#6a9955', fontStyle: 'italic' },
+  { tag: tags.number, color: '#b5cea8' },
+  { tag: tags.strong, color: '#dcdcaa', fontWeight: 'bold' },
+  { tag: tags.emphasis, color: '#dcdcaa', fontStyle: 'italic' },
+  { tag: tags.bracket, color: '#d4d4d4' },
+  { tag: tags.labelName, color: '#4fc1ff' },
+]);
 
 export function createEditor(parent, onChange) {
   const startState = EditorState.create({
@@ -52,11 +66,14 @@ Mathematical formula: $E = m c^2$
     extensions: [
       lineNumbers(),
       highlightActiveLineGutter(),
+      highlightActiveLine(),
       history(),
-      markdown(),
+      typstLanguage,
       oneDark,
-      syntaxHighlighting(defaultHighlightStyle),
-      keymap.of([...defaultKeymap, ...historyKeymap]),
+      syntaxHighlighting(typstHighlighting),
+      bracketMatching(),
+      closeBrackets(),
+      keymap.of([...defaultKeymap, ...historyKeymap, ...closeBracketsKeymap]),
       EditorView.updateListener.of((update) => {
         if (update.docChanged && onChange) {
           onChange(update.state.doc.toString());
@@ -65,17 +82,42 @@ Mathematical formula: $E = m c^2$
       EditorView.theme({
         '&': {
           height: '100%',
-          fontSize: '14px',
+          fontSize: '15px',
         },
         '.cm-scroller': {
           overflow: 'auto',
-          fontFamily: '"Fira Code", "Consolas", "Monaco", monospace',
+          fontFamily: '"Fira Code", "JetBrains Mono", "Consolas", "Monaco", monospace',
+          lineHeight: '1.6',
         },
         '.cm-content': {
           padding: '16px 0',
         },
         '.cm-line': {
-          padding: '0 16px',
+          padding: '0 20px',
+        },
+        '.cm-activeLine': {
+          backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        },
+        '.cm-activeLineGutter': {
+          backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        },
+        '.cm-gutters': {
+          backgroundColor: '#21252b',
+          borderRight: '1px solid #3e3e42',
+        },
+        '.cm-lineNumbers .cm-gutterElement': {
+          padding: '0 16px 0 8px',
+          minWidth: '40px',
+        },
+        '.cm-cursor': {
+          borderLeftColor: '#528bff',
+          borderLeftWidth: '2px',
+        },
+        '.cm-selectionBackground': {
+          backgroundColor: 'rgba(82, 139, 255, 0.3) !important',
+        },
+        '&.cm-focused .cm-selectionBackground': {
+          backgroundColor: 'rgba(82, 139, 255, 0.3) !important',
         },
       }),
     ],
