@@ -3,6 +3,7 @@ import { createEditor } from './src/editor.js';
 import { renderTypstPreview } from './src/typstPreview.js';
 import { DocumentHistory } from './src/history.js';
 import { open } from '@tauri-apps/api/dialog';
+import { invoke } from '@tauri-apps/api';
 import { openFile, saveFile, exportToPdf } from './src/fileOperations.js';
 
 let editor;
@@ -262,6 +263,44 @@ async function initializeApp() {
   updateCharCount(initialContent);
   updateUndoRedoButtons();
   updateStatus('Ready');
+
+  // Populate fonts
+  try {
+    const fontsJson = await invoke('get_fonts');
+    const fonts = JSON.parse(fontsJson);
+    const fontSelect = document.getElementById('font-select');
+
+    // Clear existing options
+    fontSelect.innerHTML = '<option value="">Default Font</option>';
+
+    if (fonts.system_fonts && fonts.system_fonts.length > 0) {
+      const systemGroup = document.createElement('optgroup');
+      systemGroup.label = 'System Fonts';
+      fonts.system_fonts.forEach(font => {
+        const option = document.createElement('option');
+        option.value = font;
+        option.textContent = font;
+        systemGroup.appendChild(option);
+      });
+      fontSelect.appendChild(systemGroup);
+    }
+
+    if (fonts.bundled_fonts && fonts.bundled_fonts.length > 0) {
+      const bundledGroup = document.createElement('optgroup');
+      bundledGroup.label = 'Bundled Fonts';
+      fonts.bundled_fonts.forEach(font => {
+        const option = document.createElement('option');
+        option.value = font;
+        option.textContent = font;
+        bundledGroup.appendChild(option);
+      });
+      fontSelect.appendChild(bundledGroup);
+    }
+
+  } catch (error) {
+    console.error('Error getting fonts:', error);
+    updateStatus('Error loading fonts', 5000);
+  }
 }
 
 if (document.readyState === 'loading') {

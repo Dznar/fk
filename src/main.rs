@@ -128,7 +128,7 @@ fn get_typst_binary_path() -> Result<PathBuf, String> {
 }
 
 #[command]
-fn compile_typst(content: String, output_path: String) -> Result<String, String> {
+fn compile_typst(app: tauri::AppHandle, content: String, output_path: String) -> Result<String, String> {
     let typst_path = get_typst_binary_path()?;
 
     let temp_dir = std::env::temp_dir();
@@ -136,7 +136,10 @@ fn compile_typst(content: String, output_path: String) -> Result<String, String>
 
     fs::write(&input_path, content).map_err(|e| e.to_string())?;
 
+    let font_paths = app.path_resolver().resolve_resource("fonts").ok_or("Failed to resolve fonts directory")?;
+
     let output = Command::new(&typst_path)
+        .env("TYPST_FONT_PATHS", font_paths)
         .arg("compile")
         .arg("--root")
         .arg("/")
@@ -201,7 +204,57 @@ fn process_typst_images_for_preview(
 }
 
 #[command]
-fn render_typst_preview(content: String) -> Result<Vec<Vec<u8>>, String> {
+fn get_fonts(app: tauri::AppHandle) -> Result<String, String> {
+    let typst_path = get_typst_binary_path()?;
+
+    // Get system fonts
+    let system_fonts_output = Command::new(&typst_path)
+        .arg("fonts")
+        .output()
+        .map_err(|e| format!("Failed to execute typst fonts command: {}", e))?;
+
+    if !system_fonts_output.status.success() {
+        let stderr = String::from_utf8_lossy(&system_fonts_output.stderr);
+        return Err(format!("Typst fonts command failed: {}", stderr));
+    }
+
+    let system_font_list_str = String::from_utf8_lossy(&system_fonts_output.stdout);
+    let system_fonts: Vec<&str> = system_font_list_str.lines().collect();
+
+    // Get bundled fonts
+    let mut bundled_fonts = Vec::new();
+    let fonts_dir = app.path_resolver()
+        .resolve_resource("fonts")
+        .ok_or("Failed to resolve fonts directory")?;
+
+    if fonts_dir.exists() {
+        let bundled_fonts_output = Command::new(&typst_path)
+            .arg("fonts")
+            .arg("--font-path")
+            .arg(&fonts_dir)
+            .arg("--ignore-system-fonts")
+            .output()
+            .map_err(|e| format!("Failed to execute typst fonts command: {}", e))?;
+
+        if !bundled_fonts_output.status.success() {
+            let stderr = String::from_utf8_lossy(&bundled_fonts_output.stderr);
+            return Err(format!("Typst fonts command failed for bundled fonts: {}", stderr));
+        }
+
+        let bundled_font_list_str = String::from_utf8_lossy(&bundled_fonts_output.stdout);
+        bundled_fonts = bundled_font_list_str.lines().map(|s| s.to_string()).collect();
+    }
+
+    let result = serde_json::json!({
+        "system_fonts": system_fonts,
+        "bundled_fonts": bundled_fonts
+    });
+
+    Ok(result.to_string())
+}
+
+#[command]
+fn render_typst_preview(app: tauri::AppHandle, content: String) -> Result<Vec<Vec<u8>>, String> {
     let typst_path = get_typst_binary_path()?;
 
     let temp_dir = std::env::temp_dir();
@@ -220,7 +273,10 @@ fn render_typst_preview(content: String) -> Result<Vec<Vec<u8>>, String> {
     let output_path_template = preview_dir.join("preview-{p}.svg");
     fs::write(&input_path, &rewritten_content).map_err(|e| e.to_string())?;
 
+    let font_paths = app.path_resolver().resolve_resource("fonts").ok_or("Failed to resolve fonts directory")?;
+
     let output = Command::new(&typst_path)
+        .env("TYPST_FONT_PATHS", font_paths)
         .arg("compile")
         .arg(&input_path)
         .arg(&output_path_template)
@@ -264,7 +320,8 @@ fn main() {
             read_file,
             write_file,
             check_typst_installation,
-            render_typst_preview
+            render_typst_preview,
+            get_fonts
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

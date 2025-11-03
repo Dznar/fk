@@ -31,19 +31,17 @@ export function createEditor(parent, onChange) {
 This paragraph contains *bold text*, _italic text_, and #underline[underlined text].
 
 Mathematical formula: $E = m c^2$
-
+#v(1cm)
+  //click on the [Image] button above to add an image
+  caption: [Sample Figure Caption]
 #pagebreak()
 
 #outline()
 
-#v(1cm)
-  
-  caption: [Sample Figure Caption]
-
-
+#pagebreak()
 #block(
-  fill: luma(20),
-  inset: 100pt,
+  fill: luma(100),
+  inset: 50pt,
   radius: 80pt,
   [
     This is a styled block with some *bold* and _italic_ text.

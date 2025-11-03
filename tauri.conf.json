@@ -54,6 +54,9 @@
       "icon": [
         "icons/32x32.png",
         "icons/icon.ico"
+      ],
+      "resources": [
+        "fonts"
       ]
     },
     "security": {
