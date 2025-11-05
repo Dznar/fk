@@ -49,9 +49,9 @@ pub fn rewrite_image_paths(
         let normalized_unwrapped = unwrapped.replace('\\', "/");
 
         if normalized_unwrapped.starts_with("assets/") || normalized_unwrapped == "assets" {
-            let mut root_rel = format!("/{}", normalized_unwrapped.trim_start_matches('/'));
+            let mut root_rel = format!("/{{}}", normalized_unwrapped.trim_start_matches('/'));
             if wrap_for_markdown && (had_angle || root_rel.contains(' ') || root_rel.contains('(') || root_rel.contains(')')) {
-                root_rel = format!("<{}>", root_rel);
+                root_rel = format!("<{{}}>", root_rel);
             }
             return Cow::Owned(root_rel);
         }
@@ -82,10 +82,10 @@ pub fn rewrite_image_paths(
             if path_str.starts_with(&content_root_str) {
                 let mut rel = path_str[content_root_str.len()..].to_string();
                 if !rel.starts_with('/') { 
-                    rel = format!("/{}", rel);
+                    rel = format!("/{{}}", rel);
                 }
                 if wrap_for_markdown && (had_angle || rel.contains(' ') || rel.contains('(') || rel.contains(')')) {
-                    rel = format!("<{}>", rel);
+                    rel = format!("<{{}}>", rel);
                 }
                 return Cow::Owned(rel);
             }
@@ -104,7 +104,7 @@ pub fn rewrite_image_paths(
                 let mut fname = if ext.is_empty() {
                     truncated_stem.to_string()
                 } else {
-                    format!("{}.{}", truncated_stem, ext)
+                    format!("{{}}.{}", truncated_stem, ext)
                 };
                 
                 let mut dest = assets_dir.join(&fname);
@@ -116,22 +116,22 @@ pub fn rewrite_image_paths(
                     let mut hasher = DefaultHasher::new();
                     abs.hash(&mut hasher);
                     let hash = hasher.finish();
-                    let hash_str = format!("{:x}", hash);
+                    let hash_str = format!("{{:x}}", hash);
                     let hash_short = &hash_str[0..8.min(hash_str.len())];
                     
                     fname = if ext.is_empty() {
-                        format!("{}-{}", truncated_stem, hash_short)
+                        format!("{{}}-{{}}", truncated_stem, hash_short)
                     } else {
-                        format!("{}-{}.{}", truncated_stem, hash_short, ext)
+                        format!("{{}}-{{}}.{{}}", truncated_stem, hash_short, ext)
                     };
                     
                     dest = assets_dir.join(&fname);
                 }
                 
                 if std::fs::copy(&abs, &dest).is_ok() {
-                    let mut rel = format!("/assets/{}", fname);
+                    let mut rel = format!("/assets/{{}}", fname);
                     if wrap_for_markdown && (had_angle || rel.contains(' ') || rel.contains('(') || rel.contains(')')) {
-                        rel = format!("<{}>", rel);
+                        rel = format!("<{{}}>", rel);
                     }
                     return Cow::Owned(rel);
                 }
@@ -140,7 +140,7 @@ pub fn rewrite_image_paths(
 
         if wrap_for_markdown {
             if had_angle || path_str.contains(' ') || path_str.contains('(') || path_str.contains(')') {
-                path_str = format!("<{}>", path_str);
+                path_str = format!("<{{}}>", path_str);
             }
         }
         
@@ -177,13 +177,13 @@ pub fn rewrite_image_paths(
         let abs = absolute_norm(base_dir, path_part, assets_root_ref, true);
 
         if let Some(title) = title_part {
-            format!("![{}]({} {})", alt_text, abs, title)
+            format!("![]({{}} {{}})", alt_text, abs, title)
         } else {
-            format!("![{}]({})", alt_text, abs)
+            format!("![]({{}})", alt_text, abs)
         }
     });
 
-    let re_html_img = Regex::new(r"<img([^>]*?)\s+src=([\"'])([^\"']+)([\"'])([^>]*)>").expect("BUG: Invalid regex for HTML images");
+    let re_html_img = Regex::new(r##"<img([^>]*?)\s+src=(["'])([^"']+)(["'])([^>]*)>"##).expect("BUG: Invalid regex for HTML images");
     let result = re_html_img.replace_all(&result, |caps: &regex::Captures| {
         let before = caps.get(1).map(|m| m.as_str()).unwrap_or("");
         let quote = caps.get(2).map(|m| m.as_str()).unwrap_or("\"");
@@ -194,17 +194,17 @@ pub fn rewrite_image_paths(
         let assets_root_ref = assets_root.as_ref();
         let abs = absolute_norm(base_dir, src, assets_root_ref, false);
         
-        format!("<img{} src={}{}{}{}>", before, quote, abs, after_quote, after)
+        format!("<img{{}} src={{}}{{}}{{}}{{}}>", before, quote, abs, after_quote, after)
     });
 
-    let re_raw_typst = Regex::new(r"#(fig|image)\(\s*([\"'])([^\"']+)([\"'])").expect("BUG: Invalid regex for raw Typst calls");
+    let re_raw_typst = Regex::new(r##"#(fig|image)\(\s*(["'])([^"']+)(["'])\)"##).expect("BUG: Invalid regex for raw Typst calls");
     let result = re_raw_typst.replace_all(&result, |caps: &regex::Captures| {
         let func = caps.get(1).map(|m| m.as_str()).unwrap_or("fig");
         let quote = caps.get(2).map(|m| m.as_str()).unwrap_or("\"");
         let path = caps.get(3).map(|m| m.as_str()).unwrap_or("");
         let assets_root_ref = assets_root.as_ref();
         let abs = absolute_norm(base_dir, path, assets_root_ref, false);
-        format!("#{}({}{}{}", func, quote, abs, quote)
+        format!("#{}({}{}{})", func, quote, abs, quote)
     });
 
     result.into_owned()
