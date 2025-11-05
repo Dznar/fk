@@ -36,7 +36,7 @@ fn main() {
         fs::set_permissions(&final_bin_path, fs::Permissions::from_mode(0o755)).unwrap();
     }
 
-    tauri_build::build().expect("Tauri build failed");
+    tauri_build::build();
 }
 
 fn download_and_extract(url: &str, bin_path: &Path, bin_name: &str) -> Result<(), Box<dyn std::error::Error>> {
