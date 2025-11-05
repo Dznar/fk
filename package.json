@@ -1,51 +1,29 @@
 {
-  "name": "tideflow-free",
+  "name": "Feather-ink",
   "private": true,
-  "version": "1.3.2",
+  "version": "0.1.0",
   "type": "module",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/BDenizKoca/Tideflow-md-to-pdf.git"
-  },
-  "author": "Burak Deniz Koca <b.denizkoca@gmail.com>",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
+    "build": "vite build",
     "preview": "vite preview",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build"
   },
-  "dependencies": {
-    "@codemirror/commands": "^6.9.0",
-    "@codemirror/lang-markdown": "^6.4.0",
-    "@codemirror/search": "^6.5.11",
-    "@codemirror/state": "^6.5.2",
-    "@codemirror/view": "^6.38.5",
-    "@tauri-apps/plugin-dialog": "2.4.0",
-    "@tauri-apps/plugin-shell": "^2.3.1",
-    "codemirror": "^6.0.2",
-    "pdfjs-dist": "^4.10.38",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "react-resizable-panels": "^3.0.6",
-    "zustand": "^5.0.7"
-  },
   "devDependencies": {
-    "@eslint/js": "^9.37.0",
+    "@tauri-apps/cli": "2.8.0",
     "@tauri-apps/api": "2.8.0",
-    "@tauri-apps/cli": "2.8.4",
-    "@types/node": "^24.7.2",
-    "@types/react": "^19.2.2",
-    "@types/react-dom": "^19.2.1",
-    "@vitejs/plugin-react": "^5.0.4",
-    "eslint": "^9.37.0",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.23",
-    "globals": "^16.4.0",
-    "typescript": "~5.9.3",
-    "typescript-eslint": "^8.46.0",
-    "vite": "^7.1.9"
+    "vite": "^5.4.2"
+  },
+  "dependencies": {
+    "@codemirror/autocomplete": "^6.19.0",
+    "@codemirror/lang-markdown": "^6.4.0",
+    "@codemirror/language": "^6.11.3",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/theme-one-dark": "^6.1.3",
+    "@codemirror/view": "^6.38.4",
+    "@google/gemini-cli": "^0.11.3",
+    "codemirror": "^6.0.2"
   }
 }
