@@ -172,6 +172,8 @@ fn render_typst_preview(app: AppHandle, content: String, current_file_path: Stri
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![
             compile_typst,
             read_file,
