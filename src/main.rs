@@ -63,7 +63,7 @@ fn process_typst_images_for_preview(
     typst_content: &str,
     preview_dir: &Path,
 ) -> Result<String, String> {
-    let re = Regex::new(r"#image(["'])([^"']+)["'])").unwrap();
+    let re = Regex::new(r"#image\((["'])([^"']+)["']\)"#).unwrap();
     let images_dir = preview_dir.join("images");
     fs::create_dir_all(&images_dir).map_err(|e| e.to_string())?;
 
