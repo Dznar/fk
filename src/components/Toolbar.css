@@ -1,0 +1,405 @@
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  background: var(--toolbar-bg);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--toolbar-text);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: visible;
+}
+
+.toolbar-logo h1 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  color: var(--toolbar-text);
+}
+
+.toolbar-actions,
+.toolbar-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow: visible;
+}
+
+.toolbar-separator {
+  width: 1px;
+  height: 28px;
+  margin: 0 0.25rem;
+  background: linear-gradient(180deg, transparent, var(--border-color-separator), transparent);
+}
+
+.hidden-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.toolbar-select {
+  background: var(--select-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  min-width: 160px;
+  box-shadow: var(--shadow-sm);
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
+  outline: none;
+}
+
+.toolbar-select:hover {
+  background: var(--select-bg-hover);
+  border-color: var(--border-color-hover);
+  box-shadow: var(--shadow-md);
+}
+
+.toolbar-select:focus-visible {
+  outline: none;
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-sm);
+}
+
+.toolbar-actions button,
+.file-control-group .file-open-btn,
+.file-control-group .dropdown-toggle,
+.toolbar-button-group > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: var(--border-radius);
+  border: var(--border-width) solid var(--interactive-border);
+  background: var(--interactive-surface);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow: none;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+  outline: none;
+}
+
+.toolbar-actions button:hover:not(:disabled),
+.file-control-group .file-open-btn:hover:not(:disabled),
+.file-control-group .dropdown-toggle:hover:not(:disabled),
+.toolbar-button-group > button:hover:not(:disabled) {
+  background: var(--interactive-surface-hover);
+  border-color: var(--interactive-border-hover);
+  transform: translateY(-1px);
+}
+
+.toolbar-actions button:active:not(:disabled),
+.file-control-group .file-open-btn:active:not(:disabled),
+.file-control-group .dropdown-toggle:active:not(:disabled),
+.toolbar-button-group > button:active:not(:disabled) {
+  background: var(--interactive-surface-active);
+  border-color: var(--interactive-border-hover);
+  transform: translateY(0);
+  box-shadow: var(--shadow-inset);
+}
+
+.toolbar-actions button:focus,
+.toolbar-actions button:focus-visible,
+.file-control-group .file-open-btn:focus,
+.file-control-group .file-open-btn:focus-visible,
+.file-control-group .dropdown-toggle:focus,
+.file-control-group .dropdown-toggle:focus-visible,
+.toolbar-button-group > button:focus,
+.toolbar-button-group > button:focus-visible {
+  outline: none;
+  border-color: var(--interactive-border-hover);
+  box-shadow: none;
+}
+
+.toolbar-actions button:disabled,
+.file-control-group .file-open-btn:disabled,
+.file-control-group .dropdown-toggle:disabled,
+.toolbar-button-group > button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.toolbar-section > button:not(.btn-primary):not(.btn-danger):not(.btn-locked),
+.file-control-group .dropdown-toggle:not(.btn-primary):not(.btn-danger):not(.btn-locked),
+.file-control-group .file-open-btn:not(.btn-primary):not(.btn-danger):not(.btn-locked) {
+  background: var(--toolbar-secondary-bg);
+  border-color: var(--toolbar-secondary-border);
+  color: var(--toolbar-secondary-text);
+  box-shadow: 0 8px 18px -12px var(--toolbar-secondary-shadow);
+}
+
+.toolbar-section > button:not(.btn-primary):not(.btn-danger):not(.btn-locked):hover,
+.file-control-group .dropdown-toggle:not(.btn-primary):not(.btn-danger):not(.btn-locked):hover,
+.file-control-group .file-open-btn:not(.btn-primary):not(.btn-danger):not(.btn-locked):hover {
+  background: var(--toolbar-secondary-hover);
+  border-color: var(--toolbar-secondary-border);
+  transform: translateY(-1px);
+}
+
+.toolbar-section > button:not(.btn-primary):not(.btn-danger):not(.btn-locked):active,
+.file-control-group .dropdown-toggle:not(.btn-primary):not(.btn-danger):not(.btn-locked):active,
+.file-control-group .file-open-btn:not(.btn-primary):not(.btn-danger):not(.btn-locked):active {
+  background: var(--toolbar-secondary-active);
+  border-color: var(--toolbar-secondary-active);
+  transform: translateY(0);
+  box-shadow: var(--shadow-inset);
+}
+
+.toolbar-section > button:not(.btn-primary):not(.btn-danger):not(.btn-locked):focus,
+.toolbar-section > button:not(.btn-primary):not(.btn-danger):not(.btn-locked):focus-visible,
+.file-control-group .dropdown-toggle:not(.btn-primary):not(.btn-danger):not(.btn-locked):focus,
+.file-control-group .dropdown-toggle:not(.btn-primary):not(.btn-danger):not(.btn-locked):focus-visible,
+.file-control-group .file-open-btn:not(.btn-primary):not(.btn-danger):not(.btn-locked):focus,
+.file-control-group .file-open-btn:not(.btn-primary):not(.btn-danger):not(.btn-locked):focus-visible {
+  outline: none;
+  border-color: var(--toolbar-secondary-active);
+  box-shadow: none;
+}
+
+.toolbar-section > button:not(.btn-primary):not(.btn-danger):not(.btn-locked):disabled,
+.file-control-group .dropdown-toggle:not(.btn-primary):not(.btn-danger):not(.btn-locked):disabled,
+.file-control-group .file-open-btn:not(.btn-primary):not(.btn-danger):not(.btn-locked):disabled {
+  opacity: 0.45;
+  transform: none;
+  box-shadow: none;
+}
+
+
+.toolbar-actions button.btn-primary,
+.file-control-group .file-open-btn.btn-primary,
+.file-control-group .dropdown-toggle.btn-primary {
+  background: var(--toolbar-primary-bg) !important;
+  border-color: var(--toolbar-primary-border) !important;
+  color: var(--toolbar-primary-text) !important;
+  box-shadow: 0 10px 24px -14px var(--toolbar-primary-shadow);
+  position: relative;
+  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+
+.toolbar-actions button.btn-primary:hover:not(:disabled),
+.file-control-group .file-open-btn.btn-primary:hover:not(:disabled),
+.file-control-group .dropdown-toggle.btn-primary:hover:not(:disabled) {
+  background: var(--toolbar-primary-hover) !important;
+  border-color: var(--toolbar-primary-border) !important;
+}
+
+.toolbar-actions button.btn-primary:active:not(:disabled),
+.file-control-group .file-open-btn.btn-primary:active:not(:disabled),
+.file-control-group .dropdown-toggle.btn-primary:active:not(:disabled) {
+  background: var(--toolbar-primary-active) !important;
+  border-color: var(--toolbar-primary-border) !important;
+}
+
+.toolbar-actions button.btn-primary::before,
+.file-control-group .file-open-btn.btn-primary::before,
+.file-control-group .dropdown-toggle.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0);
+  border-radius: inherit;
+  transition: background var(--transition-fast);
+  pointer-events: none;
+}
+
+.toolbar-actions button.btn-primary:hover:not(:disabled),
+.file-control-group .file-open-btn.btn-primary:hover:not(:disabled),
+.file-control-group .dropdown-toggle.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.toolbar-actions button.btn-primary:hover:not(:disabled)::before,
+.file-control-group .file-open-btn.btn-primary:hover:not(:disabled)::before,
+.file-control-group .dropdown-toggle.btn-primary:hover:not(:disabled)::before {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.toolbar-actions button.btn-primary:active:not(:disabled),
+.file-control-group .file-open-btn.btn-primary:active:not(:disabled),
+.file-control-group .dropdown-toggle.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--shadow-inset);
+}
+
+.toolbar-actions button.btn-primary:active:not(:disabled)::before,
+.file-control-group .file-open-btn.btn-primary:active:not(:disabled)::before,
+.file-control-group .dropdown-toggle.btn-primary:active:not(:disabled)::before {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.toolbar-actions button.btn-danger {
+  background: var(--error-color);
+  border-color: var(--error-color);
+  color: var(--text-on-primary);
+}
+
+.toolbar-actions button.btn-danger:hover:not(:disabled) {
+  background: var(--error-color-hover);
+  border-color: var(--error-color-hover);
+}
+
+.toolbar-actions button.btn-danger:active:not(:disabled) {
+  background: var(--error-color-active);
+  border-color: var(--error-color-active);
+}
+
+.toolbar-actions button.btn-locked {
+  background: var(--toolbar-locked-bg);
+  border-style: dashed;
+  border-color: var(--toolbar-locked-border);
+  color: var(--toolbar-locked-text);
+  box-shadow: var(--toolbar-locked-shadow);
+}
+
+.toolbar-actions button.btn-locked:hover:not(:disabled),
+.toolbar-actions button.btn-locked:active:not(:disabled) {
+  background: var(--toolbar-locked-bg);
+  border-color: var(--toolbar-locked-border);
+  color: var(--toolbar-locked-text);
+  transform: none;
+  box-shadow: var(--toolbar-locked-shadow);
+}
+
+.toolbar-actions button.btn-locked::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 5px,
+    rgba(0, 0, 0, 0.2) 5px,
+    rgba(0, 0, 0, 0.2) 10px
+  );
+}
+
+/* Locked dropdown items */
+.dropdown-item-locked {
+  background: var(--toolbar-locked-bg) !important;
+  border-style: dashed !important;
+  border-color: var(--toolbar-locked-border) !important;
+  color: var(--toolbar-locked-text) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.dropdown-item-locked:hover {
+  background: var(--toolbar-locked-bg) !important;
+  border-color: var(--toolbar-locked-border) !important;
+  color: var(--toolbar-locked-text) !important;
+  transform: none !important;
+}
+
+.dropdown-item-locked::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 5px,
+    rgba(0, 0, 0, 0.15) 5px,
+    rgba(0, 0, 0, 0.15) 10px
+  );
+  pointer-events: none;
+}
+
+.toolbar-button-group {
+  display: inline-flex;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.toolbar-button-group > button {
+  border-radius: 0;
+}
+
+.toolbar-button-group > button:first-child {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+
+.toolbar-button-group > button:last-child {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+  border-right: none;
+}
+
+.file-control-group {
+  display: inline-flex;
+  border-radius: 6px;
+  overflow: visible;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+
+.file-control-group .file-open-btn {
+  border-radius: 6px 0 0 6px;
+}
+
+.file-open-btn:not(.btn-primary) {
+  background: var(--toolbar-secondary-bg);
+  border-color: var(--toolbar-secondary-border);
+  color: var(--toolbar-secondary-text);
+  box-shadow: 0 8px 18px -12px var(--toolbar-secondary-shadow);
+}
+
+.file-open-btn:not(.btn-primary):hover:not(:disabled) {
+  background: var(--toolbar-secondary-hover);
+  border-color: var(--toolbar-secondary-border);
+  box-shadow: 0 12px 20px -14px var(--toolbar-secondary-shadow);
+}
+
+.file-open-btn:not(.btn-primary):active:not(:disabled) {
+  background: var(--toolbar-secondary-active);
+  border-color: var(--toolbar-secondary-active);
+}
+
+.file-control-group .dropdown {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.file-control-group .dropdown-toggle {
+  border-left: 1px solid var(--border-color);
+  border-radius: 0 6px 6px 0;
+  min-width: 40px;
+  padding: 0.55rem 0.75rem;
+}
+
+.toolbar-actions .tooltip {
+  background: var(--panel-elevated-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}

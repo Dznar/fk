@@ -1,0 +1,233 @@
+/* ============================================================================
+   Tab Bar - Properly Themed with CSS Variables
+   All colors use CSS variables from themes.css
+   ============================================================================ */
+
+.tab-bar {
+  display: flex;
+  background: var(--secondary-bar-bg);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0 12px;
+  height: 42px;
+  align-items: center;
+  justify-content: space-between;
+  overflow-x: auto;
+  box-shadow: var(--shadow-sm);
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  color: var(--text-muted);
+}
+
+.hidden-file-input {
+  display: none;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.tab-container {
+  display: flex;
+  overflow-x: auto;
+  max-width: calc(100% - 120px);
+  gap: 4px;
+}
+
+@supports (scrollbar-width: thin) {
+  .tab-container {
+    scrollbar-width: thin;
+  }
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  height: 36px;
+  background: var(--interactive-surface);
+  border: var(--border-width) solid var(--interactive-border);
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  margin-right: 0;
+  cursor: pointer;
+  min-width: 120px;
+  max-width: 200px;
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  box-shadow: none;
+}
+
+.tab::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: transparent;
+  transition: background 200ms ease, box-shadow 200ms ease;
+}
+
+.tab:hover:not(.active) {
+  background: var(--interactive-surface-hover);
+  border-color: var(--interactive-border-hover);
+  color: var(--text-secondary);
+  transform: translateY(-1px);
+}
+
+.tab:focus-visible {
+  outline: none;
+}
+
+.tab.active {
+  background: var(--surface-raised);
+  border-color: var(--border-strong);
+  color: var(--text-color);
+  font-weight: 600;
+  position: relative;
+  z-index: 1;
+  box-shadow: var(--shadow-sm);
+}
+
+.tab.active::before {
+  background: linear-gradient(90deg, var(--success-color), var(--info-color));
+  box-shadow: 0 0 10px var(--info-color);
+}
+
+.tab.modified .tab-name::after {
+  content: "●";
+  color: var(--warning-color);
+  margin-left: 6px;
+  font-size: 11px;
+  animation: modifiedPulse 2s ease-in-out infinite;
+  text-shadow: 0 0 4px var(--warning-color);
+}
+
+.tab.active.modified .tab-name::after {
+  color: var(--success-color);
+  text-shadow: 0 0 4px var(--success-color);
+}
+
+@keyframes modifiedPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(0.9); }
+}
+
+.tab-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.close-tab {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 18px;
+  color: var(--text-muted);
+  margin-left: 8px;
+  padding: 2px 6px;
+  border-radius: var(--border-radius);
+  transition: all var(--transition-normal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-tab:hover {
+  background-color: var(--error-bg);
+  color: var(--error-color);
+  transform: scale(1.08);
+}
+
+.close-tab:active {
+  background-color: var(--error-bg);
+  transform: scale(0.96);
+}
+
+.tab-actions {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+/* Help button - same base color as Open, but simple brightness hover */
+.tab-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.85rem;
+  margin-left: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1;
+  outline: none;
+
+  /* Same base color as Open button (#4e7660) */
+  background: var(--toolbar-secondary-bg);
+  border: 1px solid var(--toolbar-secondary-border);
+  color: var(--toolbar-secondary-text);
+  box-shadow: 0 8px 18px -12px var(--toolbar-secondary-shadow);
+
+  transition: filter var(--transition-fast), transform var(--transition-fast);
+}
+
+.tab-button:hover {
+  background: var(--toolbar-secondary-bg) !important;
+  filter: brightness(1.2);
+  transform: translateY(-1px);
+}
+
+.tab-button:active {
+  background: var(--toolbar-secondary-bg) !important;
+  filter: brightness(0.9);
+  transform: translateY(0);
+  box-shadow: var(--shadow-inset);
+}
+
+.tab-button:focus,
+.tab-button:focus-visible {
+  outline: none;
+  border-color: var(--toolbar-secondary-active);
+  box-shadow: none;
+}
+
+.tab-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.tab-container::-webkit-scrollbar-track {
+  background: var(--button-bg);
+  border-radius: var(--border-radius);
+}
+
+.tab-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, var(--border-hover), var(--info-color));
+  border-radius: var(--border-radius);
+  transition: all var(--transition-normal);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.tab-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, var(--info-color), var(--info-color-strong));
+  box-shadow: 0 0 8px var(--info-color);
+}

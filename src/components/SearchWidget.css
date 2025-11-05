@@ -1,0 +1,114 @@
+/* ============================================================================
+   Search Widget - Properly Themed with CSS Variables
+   All colors use CSS variables from themes.css
+   ============================================================================ */
+
+.search-widget {
+  background: var(--toolbar-bg);
+  border-bottom: 1px solid var(--border-color);
+  border-top: 1px solid var(--border-color-light);
+  padding: 8px 12px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  box-shadow: var(--shadow-lg);
+}
+
+.search-input-container {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.search-input {
+  width: 200px;
+  padding: 6px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  outline: none;
+  transition: all var(--transition-fast);
+  background: var(--search-input-bg);
+  color: var(--text-primary);
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.search-input:focus {
+  border-color: var(--border-color);
+  box-shadow: none;
+  outline: none;
+}
+
+.search-controls {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.search-option,
+.search-nav,
+.search-close,
+.search-action {
+  padding: 4px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--button-bg);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  line-height: 1;
+  min-width: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+}
+
+.search-option:hover,
+.search-nav:hover:not(:disabled),
+.search-close:hover,
+.search-action:hover:not(:disabled) {
+  background: var(--button-bg-hover);
+  border-color: var(--border-hover);
+  color: var(--text-color);
+}
+
+.search-option.active {
+  background: linear-gradient(180deg, var(--accent-color), var(--accent-color-strong));
+  border-color: var(--accent-color);
+  color: var(--text-on-primary);
+}
+
+.search-nav:disabled,
+.search-action:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.search-close {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  padding: 2px 10px;
+}
+
+.search-close:hover {
+  color: var(--error-color);
+  background: var(--error-bg);
+  border-color: var(--error-color-hover);
+}
+
+.search-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.search-row + .search-row {
+  margin-top: 6px;
+}
