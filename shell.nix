@@ -10,5 +10,8 @@ pkgs.mkShell {
     pkgs.libsoup_2_4
     pkgs.webkitgtk
     pkgs.typst
+    pkgs.cargo-xwin
+    pkgs.clang
+    pkgs.llvm
   ];
 }
