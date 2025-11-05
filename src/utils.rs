@@ -49,9 +49,9 @@ pub fn rewrite_image_paths(
         let normalized_unwrapped = unwrapped.replace('\\', "/");
 
         if normalized_unwrapped.starts_with("assets/") || normalized_unwrapped == "assets" {
-            let mut root_rel = format!("/{{}}", normalized_unwrapped.trim_start_matches('/'));
+            let mut root_rel = format!("/{}", normalized_unwrapped.trim_start_matches('/'));
             if wrap_for_markdown && (had_angle || root_rel.contains(' ') || root_rel.contains('(') || root_rel.contains(')')) {
-                root_rel = format!("<{{}}>", root_rel);
+                root_rel = format!("<{}>", root_rel);
             }
             return Cow::Owned(root_rel);
         }
@@ -82,10 +82,10 @@ pub fn rewrite_image_paths(
             if path_str.starts_with(&content_root_str) {
                 let mut rel = path_str[content_root_str.len()..].to_string();
                 if !rel.starts_with('/') { 
-                    rel = format!("/{{}}", rel);
+                    rel = format!("/{}", rel);
                 }
                 if wrap_for_markdown && (had_angle || rel.contains(' ') || rel.contains('(') || rel.contains(')')) {
-                    rel = format!("<{{}}>", rel);
+                    rel = format!("<{}>", rel);
                 }
                 return Cow::Owned(rel);
             }
@@ -104,7 +104,7 @@ pub fn rewrite_image_paths(
                 let mut fname = if ext.is_empty() {
                     truncated_stem.to_string()
                 } else {
-                    format!("{{}}.{}", truncated_stem, ext)
+                    format!("{}.{}", truncated_stem, ext)
                 };
                 
                 let mut dest = assets_dir.join(&fname);
@@ -116,22 +116,22 @@ pub fn rewrite_image_paths(
                     let mut hasher = DefaultHasher::new();
                     abs.hash(&mut hasher);
                     let hash = hasher.finish();
-                    let hash_str = format!("{{:x}}", hash);
+                    let hash_str = format!("{:x}", hash);
                     let hash_short = &hash_str[0..8.min(hash_str.len())];
                     
                     fname = if ext.is_empty() {
-                        format!("{{}}-{{}}", truncated_stem, hash_short)
+                        format!("{}-{}", truncated_stem, hash_short)
                     } else {
-                        format!("{{}}-{{}}.{{}}", truncated_stem, hash_short, ext)
+                        format!("{}-{}.{}", truncated_stem, hash_short, ext)
                     };
                     
                     dest = assets_dir.join(&fname);
                 }
                 
                 if std::fs::copy(&abs, &dest).is_ok() {
-                    let mut rel = format!("/assets/{{}}", fname);
+                    let mut rel = format!("/assets/{}", fname);
                     if wrap_for_markdown && (had_angle || rel.contains(' ') || rel.contains('(') || rel.contains(')')) {
-                        rel = format!("<{{}}>", rel);
+                        rel = format!("<{}>", rel);
                     }
                     return Cow::Owned(rel);
                 }
@@ -140,14 +140,14 @@ pub fn rewrite_image_paths(
 
         if wrap_for_markdown {
             if had_angle || path_str.contains(' ') || path_str.contains('(') || path_str.contains(')') {
-                path_str = format!("<{{}}>", path_str);
+                path_str = format!("<{}>", path_str);
             }
         }
         
         Cow::Owned(path_str)
     }
 
-    let re_md_img = Regex::new(r"!\[([^\]]*)\]\(([^)]+)\)").expect("BUG: Invalid regex for markdown images");
+    let re_md_img = Regex::new(r"!\\[([^\\]*)\\]\(([^)]+)\)").expect("BUG: Invalid regex for markdown images");
     let result = re_md_img.replace_all(input, |caps: &regex::Captures| {
         let alt_text = caps.get(1).map(|m| m.as_str()).unwrap_or("");
         let inside = caps.get(2).map(|m| m.as_str()).unwrap_or("").trim();
@@ -177,9 +177,9 @@ pub fn rewrite_image_paths(
         let abs = absolute_norm(base_dir, path_part, assets_root_ref, true);
 
         if let Some(title) = title_part {
-            format!("![]({{}} {{}})", alt_text, abs, title)
+            format!("![{{}}]({{}} {{}})", alt_text, abs, title)
         } else {
-            format!("![]({{}})", alt_text, abs)
+            format!("![{{}}]({{}})", alt_text, abs)
         }
     });
 
