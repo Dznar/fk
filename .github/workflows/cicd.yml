@@ -17,11 +17,6 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Print Cargo.toml and package.json
-      run: |
-        cat project-fonts/Cargo.toml
-        cat project-fonts/package.json
-
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
