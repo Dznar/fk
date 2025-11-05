@@ -18,7 +18,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Change to project directory
-      run: cd project-fonts
+      run: cd $GITHUB_WORKSPACE/project-fonts
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
