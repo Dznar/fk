@@ -37,8 +37,8 @@ jobs:
     
     - name: Print Cargo.toml and package.json
       run: |
-	 cat project-fonts/Cargo.toml
-	 cat project-fonts/package.json
+	cat project-fonts/Cargo.toml
+	cat project-fonts/package.json
 
     - name: Build the application
       run: npm run tauri build
