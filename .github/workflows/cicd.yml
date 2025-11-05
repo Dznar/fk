@@ -17,6 +17,12 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - name: Print Cargo.toml and package.json
+      run: |
+        cat Cargo.toml
+        cat package.json
+      working-directory: project-fonts # Removed trailing slash
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
@@ -33,15 +39,15 @@ jobs:
 
     - name: Install frontend dependencies
       run: npm install
-      working-directory: project-fonts/
+      working-directory: project-fonts # Removed trailing slash
 
     - name: Update Rust dependencies
       run: cargo update
-      working-directory: project-fonts/
+      working-directory: project-fonts # Removed trailing slash
 
     - name: Build the application
       run: npm run tauri build
-      working-directory: project-fonts/
+      working-directory: project-fonts # Removed trailing slash
 
     - name: Upload artifacts (Linux)
       if: matrix.os == 'ubuntu-22.04'
