@@ -3,7 +3,8 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use tauri::{command, AppHandle};
-use regex::Regex;
+
+mod utils;
 
 fn get_typst_binary_path(app: &AppHandle) -> Result<PathBuf, String> {
     let bin_name = if cfg!(target_os = "windows") { "typst.exe" } else { "typst" };
@@ -13,21 +14,25 @@ fn get_typst_binary_path(app: &AppHandle) -> Result<PathBuf, String> {
 }
 
 #[command]
-fn compile_typst(app: AppHandle, content: String, output_path: String) -> Result<String, String> {
+fn compile_typst(app: AppHandle, content: String, current_file_path: String, output_path: String) -> Result<String, String> {
     let typst_path = get_typst_binary_path(&app)?;
 
     let temp_dir = std::env::temp_dir();
     let input_path = temp_dir.join("temp_input.typ");
 
-    fs::write(&input_path, content).map_err(|e| e.to_string())?;
+    let base_dir = Path::new(&current_file_path).parent().unwrap_or_else(|| Path::new(""));
+    let processed_content = utils::rewrite_image_paths(&content, base_dir, &app);
+
+    fs::write(&input_path, processed_content).map_err(|e| e.to_string())?;
 
     let font_paths = app.path_resolver().resolve_resource("fonts").ok_or("Failed to resolve fonts directory")?;
+    let project_root = base_dir.parent().unwrap_or(base_dir); // A reasonable guess for project root
 
     let output = Command::new(&typst_path)
         .env("TYPST_FONT_PATHS", font_paths)
         .arg("compile")
         .arg("--root")
-        .arg("/")
+        .arg(project_root)
         .arg(&input_path)
         .arg(&output_path)
         .output()
@@ -57,31 +62,6 @@ fn check_typst_installation(app: AppHandle) -> Result<String, String> {
         Ok(path) => Ok(format!("Typst is available at: {:?}", path)),
         Err(e) => Err(format!("Typst installation check failed: {}", e)),
     }
-}
-
-fn process_typst_images_for_preview(
-    typst_content: &str,
-    preview_dir: &Path,
-) -> Result<String, String> {
-    let re = Regex::new(r"#image\((["'])([^"']+)["']\)"#).unwrap();
-    let images_dir = preview_dir.join("images");
-    fs::create_dir_all(&images_dir).map_err(|e| e.to_string())?;
-
-    let rewritten = re.replace_all(typst_content, |caps: &regex::Captures| {
-        let orig_path = &caps[1];
-        let original_file = Path::new(orig_path);
-
-        let filename = original_file.file_name().unwrap_or_default();
-        let dest_path = images_dir.join(filename);
-
-        if let Err(e) = fs::copy(&original_file, &dest_path) {
-            eprintln!("Failed to copy image: {} to {:?}: {}", orig_path, dest_path, e);
-        }
-
-        format!("#image(\"images/{fname}\")", fname = filename.to_string_lossy())
-    });
-
-    Ok(rewritten.to_string())
 }
 
 #[command]
@@ -131,7 +111,7 @@ fn get_fonts(app: AppHandle) -> Result<String, String> {
 }
 
 #[command]
-fn render_typst_preview(app: AppHandle, content: String) -> Result<Vec<Vec<u8>>, String> {
+fn render_typst_preview(app: AppHandle, content: String, current_file_path: String) -> Result<Vec<Vec<u8>>, String> {
     let typst_path = get_typst_binary_path(&app)?;
 
     let temp_dir = std::env::temp_dir();
@@ -144,17 +124,21 @@ fn render_typst_preview(app: AppHandle, content: String) -> Result<Vec<Vec<u8>>,
     ));
     fs::create_dir_all(&preview_dir).map_err(|e| e.to_string())?;
 
-    let rewritten_content = process_typst_images_for_preview(&content, &preview_dir)?;
+    let base_dir = Path::new(&current_file_path).parent().unwrap_or_else(|| Path::new(""));
+    let rewritten_content = utils::rewrite_image_paths(&content, base_dir, &app);
 
     let input_path = preview_dir.join("preview_input.typ");
     let output_path_template = preview_dir.join("preview-{p}.svg");
     fs::write(&input_path, &rewritten_content).map_err(|e| e.to_string())?;
 
     let font_paths = app.path_resolver().resolve_resource("fonts").ok_or("Failed to resolve fonts directory")?;
+    let project_root = base_dir.parent().unwrap_or(base_dir);
 
     let output = Command::new(&typst_path)
         .env("TYPST_FONT_PATHS", font_paths)
         .arg("compile")
+        .arg("--root")
+        .arg(project_root)
         .arg(&input_path)
         .arg(&output_path_template)
         .arg("--format")
