@@ -11,7 +11,7 @@
     "version": "0.1.0"
   },
   "tauri": {
-    "identifier": "com.typst.ide",
+    "identifier": "com.test.app",
     "allowlist": {
       "all": false,
       "shell": {
