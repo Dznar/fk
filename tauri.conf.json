@@ -11,7 +11,6 @@
     "version": "0.1.0"
   },
   "tauri": {
-    "identifier": "com.test.app",
     "allowlist": {
       "all": false,
       "shell": {
@@ -51,6 +50,7 @@
     "bundle": {
       "active": true,
       "targets": "all",
+      "identifier": "com.typst.ide",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
