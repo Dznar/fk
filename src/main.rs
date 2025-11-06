@@ -1,5 +1,6 @@
+use std::collections::HashMap;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use tauri::command;
 use regex::Regex;
@@ -15,14 +16,19 @@ fn compile_typst(app: tauri::AppHandle, content: String, output_path: String) ->
 
     let font_paths = app.path_resolver().resolve_resource("fonts").ok_or("Failed to resolve fonts directory")?;
 
+    let mut envs = HashMap::new();
+    envs.insert("TYPST_FONT_PATHS".to_string(), font_paths.to_string_lossy().to_string());
+
     let output = tauri::api::process::Command::new_sidecar("typst")
         .map_err(|e| format!("Failed to create sidecar command: {}", e))?
-        .env("TYPST_FONT_PATHS", font_paths)
-        .arg("compile")
-        .arg("--root")
-        .arg("/")
-        .arg(&input_path)
-        .arg(&output_path)
+        .envs(envs)
+        .args(&[
+            "compile",
+            "--root",
+            "/",
+            input_path.to_str().unwrap(),
+            &output_path,
+        ])
         .output()
         .map_err(|e| format!("Failed to execute typst command: {}", e))?;
 
@@ -82,7 +88,7 @@ fn get_fonts(app: tauri::AppHandle) -> Result<String, String> {
     // Get system fonts
     let system_fonts_output = tauri::api::process::Command::new_sidecar("typst")
         .map_err(|e| format!("Failed to create sidecar command: {}", e))?
-        .arg("fonts")
+        .args(&["fonts"])
         .output()
         .map_err(|e| format!("Failed to execute typst fonts command: {}", e))?;
 
@@ -103,10 +109,12 @@ fn get_fonts(app: tauri::AppHandle) -> Result<String, String> {
     if fonts_dir.exists() {
         let bundled_fonts_output = tauri::api::process::Command::new_sidecar("typst")
             .map_err(|e| format!("Failed to create sidecar command: {}", e))?
-            .arg("fonts")
-            .arg("--font-path")
-            .arg(&fonts_dir)
-            .arg("--ignore-system-fonts")
+            .args(&[
+                "fonts",
+                "--font-path",
+                fonts_dir.to_str().unwrap(),
+                "--ignore-system-fonts",
+            ])
             .output()
             .map_err(|e| format!("Failed to execute typst fonts command: {}", e))?;
 
@@ -147,14 +155,19 @@ fn render_typst_preview(app: tauri::AppHandle, content: String) -> Result<Vec<Ve
 
     let font_paths = app.path_resolver().resolve_resource("fonts").ok_or("Failed to resolve fonts directory")?;
 
+    let mut envs = HashMap::new();
+    envs.insert("TYPST_FONT_PATHS".to_string(), font_paths.to_string_lossy().to_string());
+
     let output = tauri::api::process::Command::new_sidecar("typst")
         .map_err(|e| format!("Failed to create sidecar command: {}", e))?
-        .env("TYPST_FONT_PATHS", font_paths)
-        .arg("compile")
-        .arg(&input_path)
-        .arg(&output_path_template)
-        .arg("--format")
-        .arg("svg")
+        .envs(envs)
+        .args(&[
+            "compile",
+            input_path.to_str().unwrap(),
+            output_path_template.to_str().unwrap(),
+            "--format",
+            "svg",
+        ])
         .output()
         .map_err(|e| format!("Failed to execute typst command: {}", e))?;
 
