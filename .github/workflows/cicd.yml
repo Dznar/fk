@@ -49,4 +49,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: feather-ink-windows
-        path: target/release/bundle/*/*
+        path: target/release/bundle/msi/*.msi
