@@ -1,0 +1,58 @@
+name: Build Application
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, windows-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Install dependencies (ubuntu)
+      if: matrix.os == 'ubuntu-22.04'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf libsoup2.4-dev libjavascriptcoregtk-4.1-dev
+
+    - name: Install frontend dependencies
+      run: npm install
+      working-directory: ${{ github.workspace }}/project-fonts
+
+    - name: Update Rust dependencies
+      run: cargo update
+      working-directory: ${{ github.workspace }}/project-fonts
+
+    - name: Build the application
+      run: npm run tauri build
+      working-directory: ${{ github.workspace }}/project-fonts
+
+    - name: Upload artifacts (Linux)
+      if: matrix.os == 'ubuntu-22.04'
+      uses: actions/upload-artifact@v4
+      with:
+        name: feather-ink-linux
+        path: ${{ github.workspace }}/project-fonts/target/release/bundle/*/*
+      
+    - name: Upload artifacts (Windows)
+      if: matrix.os == 'windows-latest'
+      uses: actions/upload-artifact@v4
+      with:
+        name: feather-ink-windows
+        path: ${{ github.workspace }}/project-fonts/target/release/bundle/*/*
