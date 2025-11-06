@@ -59,7 +59,10 @@
         "icons/icon.ico"
       ],
       "resources": [
-        "fonts"
+        "fonts/**/*"
+      ],
+      "externalBin": [
+        "sidecars/typst"
       ]
     },
     "security": {
