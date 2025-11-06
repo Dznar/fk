@@ -3,7 +3,7 @@ import { createEditor } from './src/editor.js';
 import { renderTypstPreview } from './src/typstPreview.js';
 import { DocumentHistory } from './src/history.js';
 import { open } from '@tauri-apps/api/dialog';
-import { invoke } from '@tauri-apps/api';
+import { invoke } from '@tauri-apps/api/tauri';
 import { openFile, saveFile, exportToPdf } from './src/fileOperations.js';
 
 let editor;
