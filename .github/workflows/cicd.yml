@@ -55,5 +55,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: feather-ink-windows
-        path: ${{ github.workspace }}/project-fonts/target/release/bundle/msi/*.msi
-	path: ${{ github.workspace }}/project-fonts/target/release/bundle/exe/*.exe
+        path: ${{ github.workspace }}/project-fonts/target/release/bundle/*/*
