@@ -11,7 +11,7 @@
     "version": "0.1.0"
   },
   "tauri": {
-    "identifier": "com.yourcompany.featherink",
+    "identifier": "com.typst.ide",
     "allowlist": {
       "all": false,
       "shell": {
