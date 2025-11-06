@@ -17,9 +17,6 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Change to project directory
-      run: cd $GITHUB_WORKSPACE/project-fonts
-
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
@@ -36,23 +33,26 @@ jobs:
 
     - name: Install frontend dependencies
       run: npm install
+      working-directory: ${{ github.workspace }}/project-fonts
 
     - name: Update Rust dependencies
       run: cargo update
+      working-directory: ${{ github.workspace }}/project-fonts
 
     - name: Build the application
       run: npm run tauri build
+      working-directory: ${{ github.workspace }}/project-fonts
 
     - name: Upload artifacts (Linux)
       if: matrix.os == 'ubuntu-22.04'
       uses: actions/upload-artifact@v4
       with:
         name: feather-ink-linux
-        path: target/release/bundle/*/*
+        path: ${{ github.workspace }}/project-fonts/target/release/bundle/*/*
       
     - name: Upload artifacts (Windows)
       if: matrix.os == 'windows-latest'
       uses: actions/upload-artifact@v4
       with:
         name: feather-ink-windows
-        path: target/release/bundle/msi/*.msi
+        path: ${{ github.workspace }}/project-fonts/target/release/bundle/msi/*.msi
