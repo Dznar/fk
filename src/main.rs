@@ -35,7 +35,7 @@ fn compile_typst(app: tauri::AppHandle, content: String, output_path: String) ->
     if output.status.success() {
         Ok(format!("PDF exported successfully to: {}", output_path))
     } else {
-        let stderr = String::from_utf8_lossy(&output.stderr);
+        let stderr = output.stderr;
         Err(format!("Typst compilation failed: {}", stderr))
     }
 }
@@ -93,11 +93,11 @@ fn get_fonts(app: tauri::AppHandle) -> Result<String, String> {
         .map_err(|e| format!("Failed to execute typst fonts command: {}", e))?;
 
     if !system_fonts_output.status.success() {
-        let stderr = String::from_utf8_lossy(&system_fonts_output.stderr);
+        let stderr = system_fonts_output.stderr;
         return Err(format!("Typst fonts command failed: {}", stderr));
     }
 
-    let system_font_list_str = String::from_utf8_lossy(&system_fonts_output.stdout);
+    let system_font_list_str = system_fonts_output.stdout;
     let system_fonts: Vec<&str> = system_font_list_str.lines().collect();
 
     // Get bundled fonts
@@ -119,11 +119,11 @@ fn get_fonts(app: tauri::AppHandle) -> Result<String, String> {
             .map_err(|e| format!("Failed to execute typst fonts command: {}", e))?;
 
         if !bundled_fonts_output.status.success() {
-            let stderr = String::from_utf8_lossy(&bundled_fonts_output.stderr);
+            let stderr = bundled_fonts_output.stderr;
             return Err(format!("Typst fonts command failed for bundled fonts: {}", stderr));
         }
 
-        let bundled_font_list_str = String::from_utf8_lossy(&bundled_fonts_output.stdout);
+        let bundled_font_list_str = bundled_fonts_output.stdout;
         bundled_fonts = bundled_font_list_str.lines().map(|s| s.to_string()).collect();
     }
 
@@ -172,7 +172,7 @@ fn render_typst_preview(app: tauri::AppHandle, content: String) -> Result<Vec<Ve
         .map_err(|e| format!("Failed to execute typst command: {}", e))?;
 
     if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
+        let stderr = output.stderr;
         fs::remove_dir_all(&preview_dir).ok();
         return Err(format!("Typst rendering failed: {}", stderr));
     }
