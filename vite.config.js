@@ -14,9 +14,6 @@ export default defineConfig({
     sourcemap: !!process.env.TAURI_DEBUG,
     rollupOptions: {
       external: [
-        '@tauri-apps/api',
-        '@tauri-apps/api/dialog',
-        '@tauri-apps/api/tauri',
       ],
     },
   },
