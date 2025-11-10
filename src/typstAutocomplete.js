@@ -1,4 +1,5 @@
 import { autocompletion, completeFromList } from '@codemirror/autocomplete';
+import { typstSnippets } from './snippets.js';
 
 const TYPST_FUNCTIONS = [
   { label: 'heading', detail: 'Create a heading (use = instead)', type: 'keyword' },
@@ -78,6 +79,24 @@ function getContext(text, pos) {
 function getTypstCompletions(context) {
   const { line, word } = getContext(context.state.doc.toString(), context.pos);
   const completions = [];
+
+  // Add snippet completions
+  Object.keys(typstSnippets).forEach(key => {
+    const snippet = typstSnippets[key];
+    if (key.startsWith(word) || snippet.label.startsWith(word)) {
+      completions.push({
+        label: snippet.label,
+        detail: snippet.detail,
+        type: 'snippet',
+        apply: (view, completion, from, to) => {
+          view.dispatch({
+            changes: { from, to, insert: snippet.template.replace(/\$\d+/g, '') },
+            selection: { anchor: from }
+          });
+        }
+      });
+    }
+  });
 
   if (line.includes('(') && !line.includes(')')) {
     const functionMatch = /#(\w+)\s*\(/.exec(line.slice(0, line.lastIndexOf(word)));

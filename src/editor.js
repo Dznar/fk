@@ -7,6 +7,8 @@ import { tags } from '@lezer/highlight';
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import typstLanguage from './typstLanguage.js';
 import { createTypstAutocompleteExtension } from './typstAutocomplete.js';
+import { findReplaceExtension } from './findReplace.js';
+import { syntaxValidationExtension } from './syntaxValidator.js';
 
 const typstHighlighting = HighlightStyle.define([
   { tag: tags.heading, color: '#4ec9b0', fontWeight: 'bold' },
@@ -201,6 +203,8 @@ Mathematical formula: $E = m c^2$
       bracketMatching(),
       closeBrackets(),
       createTypstAutocompleteExtension(),
+      findReplaceExtension,
+      syntaxValidationExtension,
       keymap.of([...defaultKeymap, ...historyKeymap, ...closeBracketsKeymap]),
       EditorView.updateListener.of((update) => {
         if (update.docChanged && onChange) {

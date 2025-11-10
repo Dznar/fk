@@ -5,12 +5,19 @@ import { DocumentHistory } from './src/history.js';
 import { open } from '@tauri-apps/api/dialog';
 import { invoke } from '@tauri-apps/api/tauri';
 import { openFile, saveFile, exportToPdf } from './src/fileOperations.js';
+import { setSearchQuery, findNext, replaceNext, replaceAll } from './src/findReplace.js';
+import { runValidation } from './src/syntaxValidator.js';
+import { createColorPicker, detectColorAtCursor } from './src/colorPicker.js';
+import { EditorView } from '@codemirror/view';
 
 let editor;
 let currentFilePath = null;
 let documentHistory = new DocumentHistory();
 let autoSaveTimer = null;
 let selectedFont = '';
+let colorPicker = null;
+let currentSearchQuery = '';
+let currentReplaceText = '';
 
 async function updatePreview(content) {
   const previewElement = document.getElementById('preview');
@@ -52,6 +59,7 @@ function handleEditorChange(content) {
     await updatePreview(content);
     documentHistory.push(content);
     updateUndoRedoButtons();
+    runValidation(editor);
   }, 800);
 }
 
@@ -193,7 +201,7 @@ async function handleInsertImage() {
     if (selected && typeof selected === 'string') {
       const imagePath = selected.replace(/\\/g, '/'); // Normalize path for typst
       const textToInsert = `#image("${imagePath}")`;
-      
+
       const currentPos = editor.state.selection.main.head;
       const transaction = editor.state.update({
         changes: { from: currentPos, insert: textToInsert }
@@ -203,6 +211,90 @@ async function handleInsertImage() {
   } catch (error) {
     updateStatus(`Error selecting image: ${error}`, 5000);
   }
+}
+
+function handleFindReplace() {
+  const panel = document.getElementById('find-replace-panel');
+  const isVisible = panel.style.display === 'flex';
+  panel.style.display = isVisible ? 'none' : 'flex';
+
+  if (!isVisible) {
+    document.getElementById('search-input').focus();
+  }
+}
+
+function handleFind() {
+  currentSearchQuery = document.getElementById('search-input').value;
+  if (!currentSearchQuery) return;
+
+  editor.dispatch({
+    effects: setSearchQuery.of(currentSearchQuery)
+  });
+
+  const match = findNext(editor, currentSearchQuery, editor.state.selection.main.to);
+  if (match) {
+    editor.dispatch({
+      selection: { anchor: match.from, head: match.to },
+      effects: EditorView.scrollIntoView(match.from, { y: 'center' })
+    });
+    updateStatus(`Found: "${currentSearchQuery}"`);
+  } else {
+    updateStatus('No matches found', 3000);
+  }
+}
+
+function handleReplace() {
+  currentReplaceText = document.getElementById('replace-input').value;
+  if (!currentSearchQuery) {
+    updateStatus('Enter search text first', 3000);
+    return;
+  }
+
+  replaceNext(editor, currentSearchQuery, currentReplaceText);
+  updateStatus('Replaced');
+}
+
+function handleReplaceAll() {
+  currentReplaceText = document.getElementById('replace-input').value;
+  if (!currentSearchQuery) {
+    updateStatus('Enter search text first', 3000);
+    return;
+  }
+
+  const count = replaceAll(editor, currentSearchQuery, currentReplaceText);
+  updateStatus(`Replaced ${count} occurrence(s)`);
+
+  editor.dispatch({
+    effects: setSearchQuery.of('')
+  });
+}
+
+function handleCloseFindReplace() {
+  document.getElementById('find-replace-panel').style.display = 'none';
+  editor.dispatch({
+    effects: setSearchQuery.of('')
+  });
+}
+
+function handleColorPicker() {
+  const pos = editor.state.selection.main.head;
+  const text = editor.state.doc.toString();
+  const detectedColor = detectColorAtCursor(text, pos);
+
+  colorPicker.show(detectedColor || '#000000');
+}
+
+function handleColorInsert(color) {
+  const textToInsert = `rgb("${color}")`;
+  const currentPos = editor.state.selection.main.head;
+
+  editor.dispatch({
+    changes: { from: currentPos, insert: textToInsert },
+    selection: { anchor: currentPos + textToInsert.length }
+  });
+
+  colorPicker.hide();
+  updateStatus(`Color inserted: ${color}`);
 }
 
 function initializeResizer() {
@@ -245,6 +337,9 @@ async function initializeApp() {
   const editorContainer = document.getElementById('editor');
   editor = createEditor(editorContainer, handleEditorChange);
 
+  colorPicker = createColorPicker(handleColorInsert);
+  document.body.appendChild(colorPicker.element);
+
   document.getElementById('btn-new').addEventListener('click', handleNew);
   document.getElementById('btn-open').addEventListener('click', handleOpen);
   document.getElementById('btn-save').addEventListener('click', handleSave);
@@ -253,7 +348,22 @@ async function initializeApp() {
   document.getElementById('btn-redo').addEventListener('click', handleRedo);
   document.getElementById('btn-refresh').addEventListener('click', handleRefresh);
   document.getElementById('btn-insert-image').addEventListener('click', handleInsertImage);
+  document.getElementById('btn-find-replace').addEventListener('click', handleFindReplace);
+  document.getElementById('btn-color-picker').addEventListener('click', handleColorPicker);
   document.getElementById('font-select').addEventListener('change', handleFontChange);
+
+  document.getElementById('btn-find-next').addEventListener('click', handleFind);
+  document.getElementById('btn-replace-next').addEventListener('click', handleReplace);
+  document.getElementById('btn-replace-all').addEventListener('click', handleReplaceAll);
+  document.getElementById('btn-close-find').addEventListener('click', handleCloseFindReplace);
+
+  document.getElementById('search-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleFind();
+  });
+
+  document.getElementById('replace-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleReplace();
+  });
 
   initializeResizer();
 
@@ -262,6 +372,7 @@ async function initializeApp() {
   await updatePreview(initialContent);
   updateCharCount(initialContent);
   updateUndoRedoButtons();
+  runValidation(editor);
   updateStatus('Ready');
 
   // Populate fonts
