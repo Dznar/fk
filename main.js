@@ -6,7 +6,6 @@ import { open } from '@tauri-apps/api/dialog';
 import { invoke } from '@tauri-apps/api/tauri';
 import { openFile, saveFile, exportToPdf } from './src/fileOperations.js';
 import { setSearchQuery, findNext, replaceNext, replaceAll } from './src/findReplace.js';
-import { runValidation } from './src/syntaxValidator.js';
 import { createColorPicker, detectColorAtCursor } from './src/colorPicker.js';
 import { EditorView } from '@codemirror/view';
 
