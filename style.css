@@ -532,26 +532,37 @@ body {
   border-color: var(--accent-color);
 }
 
-.color-picker-presets {
-  display: grid;
-  grid-template-columns: repeat(10, 1fr);
+.color-spectrum-container {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
   margin-bottom: 16px;
 }
 
-.color-preset {
+.color-spectrum-satlight {
   width: 100%;
-  padding-top: 100%;
-  position: relative;
-  border-radius: 4px;
-  cursor: pointer;
-  border: 2px solid transparent;
-  transition: all 0.2s ease;
+  height: 140px;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  cursor: crosshair;
+  transition: border-color 0.2s ease;
 }
 
-.color-preset:hover {
+.color-spectrum-satlight:hover {
   border-color: var(--accent-color);
-  transform: scale(1.1);
+}
+
+.color-spectrum-hue {
+  width: 100%;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.color-spectrum-hue:hover {
+  border-color: var(--accent-color);
 }
 
 .color-picker-apply {
