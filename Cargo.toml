@@ -20,6 +20,6 @@ zip = { version = "0.6", default-features = false, features = ["deflate", "time"
 tar = "0.4"
 xz2 = "0.1"
 regex = "1"
-typst = "0.13.1" 
+typst = "0.14.0" 
 [features]
 custom-protocol = ["tauri/custom-protocol"]
